@@ -55,11 +55,11 @@ resource "azurerm_linux_virtual_machine_scale_set" "web_vmss" {
   sku                 = "Standard_D2s_v3" # 2 vCPU, 4GB RAM
   instances           = 1                 # 初始实例数
   admin_username      = "yan"
-  admin_password      = "123456"
+  admin_password      = "Yan1234567890"
 
   admin_ssh_key {
     username   = "yan"
-    public_key = file("C:/Users/zy/.ssh/id_rsa.pub") # 替换为您的公钥路径
+    public_key = file("C:/Users/zy/.ssh/id_rsa.pub") # ssh-keygen -t rsa -b 4096
   }
 
   source_image_reference {
@@ -154,5 +154,47 @@ resource "azurerm_monitor_autoscale_setting" "web_vmss_autoscale" {
       }
     }
   }
+}
+
+
+# 创建NSG并允许Bastion的ssh访问web_vmss
+resource "azurerm_network_security_group" "web_vmss_subnet_nsg" {
+  name                = "web-vmss-subnet-nsg"
+  location            = azurerm_resource_group.WEB-ResourceGroup.location
+  resource_group_name = azurerm_resource_group.WEB-ResourceGroup.name
+
+  /*
+  security_rule {
+    name                       = "allow-bastion-ssh"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "10.0.5.0/24"
+    destination_address_prefix = "10.0.2.0/24"
+  }
+*/
+
+  # 新增HTTP规则
+  security_rule {
+    name                       = "allow-http-internet"
+    priority                   = 200 # 注意优先级要高于或低于现有规则
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_ranges    = ["80", "443"]
+    source_address_prefix      = "10.0.1.0/24"
+    destination_address_prefix = "10.0.2.0/24"
+  }
+}
+
+
+# 将NSG关联到WEB-VMSS所在的子网
+resource "azurerm_subnet_network_security_group_association" "web_vmss_subnet_nsg_association" {
+  subnet_id                 = var.web_subnet_id
+  network_security_group_id = azurerm_network_security_group.web_vmss_subnet_nsg.id
 }
 

@@ -3,22 +3,13 @@ resource "azurerm_resource_group" "VNET-ResourceGroup" {
   location = var.location
 }
 
-/*
-resource "time_sleep" "wait" {
-  depends_on      = [azurerm_resource_group.Yan-VNET-ResourceGroup]
-  create_duration = "10s"
-}
-*/
-
 resource "azurerm_virtual_network" "VNET" {
   name                = "VNET"
   address_space       = ["10.0.0.0/16"]
   location            = var.location
   resource_group_name = var.resource_group_name
-  #depends_on          = [time_sleep.wait]
-  depends_on = [azurerm_resource_group.VNET-ResourceGroup]
+  depends_on          = [azurerm_resource_group.VNET-ResourceGroup]
 }
-
 
 resource "azurerm_subnet" "DMZSubnet" {
   name                 = "DMZSubnet"
@@ -26,7 +17,6 @@ resource "azurerm_subnet" "DMZSubnet" {
   virtual_network_name = azurerm_virtual_network.VNET.name
   address_prefixes     = ["10.0.1.0/24"]
 }
-
 
 resource "azurerm_subnet" "WEBSubnet" {
   name                 = "WEBSubnet"

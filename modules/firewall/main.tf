@@ -20,11 +20,11 @@ resource "azurerm_lb_backend_address_pool" "nva_backend_pool" {
   name            = "nva-backend-pool"
 
   tunnel_interface {
-    identifier = 800  # 隧道 ID (1-8000)，需与 NVA 配置匹配
-    type       = "Internal"  # 或 "External"（取决于 NVA 部署方式）
-    protocol   = "VXLAN"     # 或 "Geneve"（NVA 需支持）
-    port = 1234
-  }  
+    identifier = 800        # 隧道 ID (1-8000)，需与 NVA 配置匹配
+    type       = "Internal" # 或 "External"（取决于 NVA 部署方式）
+    protocol   = "VXLAN"    # 或 "Geneve"（NVA 需支持）
+    port       = 1234
+  }
 }
 
 # NVA 网络接口（放在 DMZ 子网）
@@ -115,7 +115,7 @@ resource "azurerm_network_security_group" "nva_nsg" {
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "80-443"  # 允许 HTTP/HTTPS
+    destination_port_range     = "80-443" # 允许 HTTP/HTTPS
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }

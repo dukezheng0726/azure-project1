@@ -10,7 +10,7 @@ resource "azurerm_lb" "business-lb" {
   sku                 = "Basic"
 
   frontend_ip_configuration {
-    name                          = "BUSINESSPublicIPAddress"
+    name                          = "BUSINESSStaticIPAddress"
     private_ip_address            = "10.0.3.100"
     private_ip_address_allocation = "Static"
     subnet_id                     = var.business_subnet_id
@@ -24,7 +24,7 @@ resource "azurerm_lb_backend_address_pool" "business_lb_backend" {
 
 resource "azurerm_lb_probe" "business_lb_probe" {
   loadbalancer_id     = azurerm_lb.business-lb.id
-  name                = "HTTP-Probe"
+  name                = "Business-Probe"
   port                = 80
   protocol            = "Tcp"
   interval_in_seconds = 5
@@ -33,11 +33,11 @@ resource "azurerm_lb_probe" "business_lb_probe" {
 
 resource "azurerm_lb_rule" "business_http_rule" {
   loadbalancer_id                = azurerm_lb.business-lb.id
-  name                           = "HTTP"
+  name                           = "business-lb-rule"
   protocol                       = "Tcp"
   frontend_port                  = 80
   backend_port                   = 80
-  frontend_ip_configuration_name = "BUSINESSPublicIPAddress"
+  frontend_ip_configuration_name = "BUSINESSStaticIPAddress"
   backend_address_pool_ids       = [azurerm_lb_backend_address_pool.business_lb_backend.id]
   probe_id                       = azurerm_lb_probe.business_lb_probe.id
 }
@@ -140,3 +140,31 @@ resource "azurerm_monitor_autoscale_setting" "business_vmss_autoscale" {
 }
 
 
+
+# 创建NSG并允许Bastion的ssh访问business_vmss
+resource "azurerm_network_security_group" "business_vmss_subnet_nsg" {
+  name                = "business-vmss-subnet-nsg"
+  resource_group_name = azurerm_resource_group.BUSINESS-ResourceGroup.name
+  location            = azurerm_resource_group.BUSINESS-ResourceGroup.location
+
+  # 新增HTTP规则
+  security_rule {
+    name                       = "allow-http-internet"
+    priority                   = 200 # 注意优先级要高于或低于现有规则
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_ranges    = ["80", "443"]
+    source_address_prefix      = "10.0.2.0/24"
+    destination_address_prefix = "10.0.3.0/24"
+  }
+}
+
+
+
+# 将NSG关联到Business-VMSS所在的子网
+resource "azurerm_subnet_network_security_group_association" "business_vmss_subnet_nsg_association" {
+  subnet_id                 = var.business_subnet_id
+  network_security_group_id = azurerm_network_security_group.business_vmss_subnet_nsg.id
+}
