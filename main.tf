@@ -11,7 +11,7 @@ module "bastion" {
 
 /*
 module "webservers" {
-  source        = "./modules/webservers"
+  source        = "./modules/web-servers"
   web_subnet_id = module.vnet.web_subnet_id
 }
 */

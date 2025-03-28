@@ -8,7 +8,7 @@ resource "azurerm_lb" "db-lb" {
   name                = "DB-LB"
   location            = azurerm_resource_group.DB-ResourceGroup.location
   resource_group_name = azurerm_resource_group.DB-ResourceGroup.name
-  sku                 = "Basic"
+  sku                 = "Standard"
 
   frontend_ip_configuration {
     name                          = "DBStaticIPAddress"
@@ -107,22 +107,21 @@ resource "azurerm_windows_virtual_machine" "sql_vm" {
     version   = "latest"
   }
 
- # 显式启用 VM 代理（Windows 默认已启用，但建议声明）
- # provision_vm_agent = true  # 此参数对 Windows VM 可选，对 Linux VM 必需
+  #availability_set_id = azurerm_availability_set.sql_avset.id  # 关键添加
 }
 
-/*
-resource "azurerm_virtual_machine_extension" "monitoring" {
-  count                = 2
-  name                 = "AzureMonitorWindowsAgent"
-  virtual_machine_id   = azurerm_windows_virtual_machine.sql_vm[count.index].id
-  publisher            = "Microsoft.Azure.Monitor"
-  type                 = "AzureMonitorWindowsAgent"
-  type_handler_version = "1.0"
-  auto_upgrade_minor_version = true
-}
-*/
 
+# 添加共享可用性集资源
+resource "azurerm_availability_set" "sql_avset" {
+
+  
+  name                         = "sql-avset"
+  location                     = azurerm_resource_group.DB-ResourceGroup.location
+  resource_group_name          = azurerm_resource_group.DB-ResourceGroup.name
+  platform_fault_domain_count  = 2
+  platform_update_domain_count = 2
+  managed                      = true
+}
 
 # 将VM NICs添加到LB后端池
 resource "azurerm_network_interface_backend_address_pool_association" "sql_lb_assoc" {
