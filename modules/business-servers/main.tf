@@ -63,10 +63,6 @@ resource "azurerm_windows_virtual_machine_scale_set" "bus_vmss" {
     caching              = "ReadWrite"
   }
 
-  #启用rdp协议
-  #winrm_listener {
-  #  protocol = "Http"
-  #}
 
   network_interface {
     name    = "vmss-nic"
@@ -149,7 +145,7 @@ resource "azurerm_network_security_group" "business_vmss_subnet_nsg" {
 
   # 新增HTTP规则
   security_rule {
-    name                       = "allow-http-internet"
+    name                       = "allow-web-http-https"
     priority                   = 200 # 注意优先级要高于或低于现有规则
     direction                  = "Inbound"
     access                     = "Allow"

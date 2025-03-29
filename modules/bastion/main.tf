@@ -11,7 +11,7 @@ resource "azurerm_public_ip" "bastion_pip" {
   sku                 = "Standard"
 }
 
-resource "azurerm_bastion_host" "bastion" {
+resource "azurerm_bastion_host" "bastion_host" {
   name                = "bastion-host"
   location            = azurerm_resource_group.BASTION-ResourceGroup.location
   resource_group_name = azurerm_resource_group.BASTION-ResourceGroup.name

@@ -107,21 +107,12 @@ resource "azurerm_windows_virtual_machine" "sql_vm" {
     version   = "latest"
   }
 
-  #availability_set_id = azurerm_availability_set.sql_avset.id  # 关键添加
+  #启用rdp协议
+  winrm_listener {
+    protocol = "Http"
+  }
 }
 
-
-# 添加共享可用性集资源
-resource "azurerm_availability_set" "sql_avset" {
-
-  
-  name                         = "sql-avset"
-  location                     = azurerm_resource_group.DB-ResourceGroup.location
-  resource_group_name          = azurerm_resource_group.DB-ResourceGroup.name
-  platform_fault_domain_count  = 2
-  platform_update_domain_count = 2
-  managed                      = true
-}
 
 # 将VM NICs添加到LB后端池
 resource "azurerm_network_interface_backend_address_pool_association" "sql_lb_assoc" {
